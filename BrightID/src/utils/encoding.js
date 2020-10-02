@@ -44,6 +44,18 @@ export function b64ToUrlSafeB64(s: string) {
   return s.replace(/[/+=]/g, (c) => alts[c]);
 }
 
+export function urlSafeB64ToB64(s) {
+  const alts = {
+    _: '/',
+    '-': '+',
+  };
+  s = s.replace(/[-_]/g, (c) => alts[c]);
+  while (s.length % 4) {
+    s += '=';
+  }
+  return s;
+}
+
 export const objToB64 = compose(uInt8ArrayToB64, objToUint8);
 
 export const hash = (data: string) => {

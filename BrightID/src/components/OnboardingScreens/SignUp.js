@@ -103,17 +103,11 @@ export class SignUp extends React.Component<Props, State> {
           'A photo is required. Please press enter on the keyboard.',
         );
       }
-      const result = await dispatch(
-        handleBrightIdCreation({ photo: finalBase64, name }),
-      );
-      if (result) {
-        dispatch(checkTasks());
-        navigation.navigate('App');
-      } else {
-        this.setState({
-          creatingBrightId: false,
-        });
-      }
+
+      await dispatch(handleBrightIdCreation({ photo: finalBase64, name }));
+
+      dispatch(checkTasks());
+      navigation.navigate('App');
     } catch (err) {
       this.setState({
         creatingBrightId: false,

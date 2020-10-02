@@ -1,16 +1,41 @@
 // @flow
 
+import { Alert } from 'react-native';
 import nacl from 'tweetnacl';
-import { compose } from 'ramda';
 import { setUserData, setHashedId } from '@/actions';
 import { createImageDirectory, saveImage } from '@/utils/filesystem';
 import {
   b64ToUrlSafeB64,
   uInt8ArrayToB64,
-  objToUint8,
   objToB64,
+  urlSafeB64ToB64,
+  strToUint8Array,
+  b64ToUint8Array,
 } from '@/utils/encoding';
-import { saveSecretKey } from '@/utils/keychain';
+import { saveSecretKey, obtainKeys } from '@/utils/keychain';
+
+const testKeypairSigning = async () => {
+  const message = 'test messsage';
+  let { username, secretKey } = await obtainKeys();
+
+  const signingKey = urlSafeB64ToB64(username);
+
+  const sig = uInt8ArrayToB64(
+    nacl.sign.detached(strToUint8Array(message), secretKey),
+  );
+
+  // copied from BrightID node operations
+
+  if (
+    !nacl.sign.detached.verify(
+      strToUint8Array(message),
+      b64ToUint8Array(sig),
+      b64ToUint8Array(signingKey),
+    )
+  ) {
+    throw new Error('invalid signature');
+  }
+};
 
 export const handleBrightIdCreation = ({
   name,
@@ -24,6 +49,12 @@ export const handleBrightIdCreation = ({
     let { publicKey, secretKey } = await nacl.sign.keyPair();
     let b64PubKey = uInt8ArrayToB64(publicKey);
     let id = b64ToUrlSafeB64(b64PubKey);
+
+    // save id / secretKey inside of keychain
+    await saveSecretKey(id, secretKey);
+
+    // this will throw if fails
+    await testKeypairSigning();
 
     // creates Image Directory
     await createImageDirectory();
@@ -45,14 +76,18 @@ export const handleBrightIdCreation = ({
     await dispatch(setUserData(userData));
     // to fix bug while testing
     dispatch(setHashedId(''));
-    // save id / secretKey inside of keychain
-    await saveSecretKey(id, secretKey);
 
     console.log('brightid creation success');
 
     // // navigate to home page
     return true;
   } catch (err) {
-    err instanceof Error ? console.warn(err.message) : console.log(err);
+    await saveSecretKey('', []);
+    console.error(err.message);
+    Alert.alert(
+      'Please try again',
+      `There was an error generating your BrightID crypto keypair`,
+    );
+    throw err;
   }
 };
