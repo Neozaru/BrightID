@@ -27,10 +27,16 @@ export const bootstrapV0 = async (navigation: navigation) => {
       userData = JSON.parse(userData);
       // convert private key to uInt8Array
       if (!userData.id) {
-        userData.id = uInt8ArrayToB64(objToUint8(userData.publicKey));
+        if (typeof userData.publicKey !== 'string') {
+          userData.id = b64ToUrlSafeB64(
+            uInt8ArrayToB64(objToUint8(userData.publicKey)),
+          );
+        } else {
+          userData.id = b64ToUrlSafeB64(userData.publicKey);
+        }
       }
 
-      await saveSecretKey(b64ToUrlSafeB64(userData.id), userData.secretKey);
+      await saveSecretKey(userData.id, userData.secretKey);
       userData.secretKey = objToB64(userData.secretKey);
       // update redux store
       await store.dispatch(setUserData(userData));

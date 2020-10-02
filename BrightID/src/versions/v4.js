@@ -25,9 +25,13 @@ export const bootstrap = async (version: string) => {
     const dataObj = JSON.parse(dataStr);
     // save secretKey in keychain
     if (!dataObj.id) {
-      dataObj.id = b64ToUrlSafeB64(
-        uInt8ArrayToB64(objToUint8(dataObj.publicKey)),
-      );
+      if (typeof dataObj.publicKey !== 'string') {
+        dataObj.id = b64ToUrlSafeB64(
+          uInt8ArrayToB64(objToUint8(dataObj.publicKey)),
+        );
+      } else {
+        dataObj.id = b64ToUrlSafeB64(dataObj.publicKey);
+      }
     }
 
     dataObj.searchParam = '';
