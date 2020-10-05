@@ -3,12 +3,6 @@ import { getGenericPassword } from 'react-native-keychain';
 import store from '@/store';
 import SInfo from 'react-native-sensitive-info';
 import { objToB64, b64ToUint8Array } from './encoding';
-import { DEVICE_ANDROID } from './constants';
-
-// setup preferences from react-native-sensitive-info
-if (DEVICE_ANDROID) {
-  SInfo.setInvalidatedByBiometricEnrollment(false);
-}
 
 const sharedPreferencesName = 'brightid_shared_preferences';
 const keychainService = 'org.brightid.demo.SharedKeychain';
